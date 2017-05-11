@@ -64,6 +64,8 @@ public interface SynthesizedOutput extends ExternalResource, OutputDevice {
             DocumentServer documentServer)
             throws NoresourceError, BadFetchError;
 
+    void emptyQueue();
+
     /**
      * Delays until all prompts are played that do not allow for barge-in.
      * 
