@@ -172,6 +172,11 @@ public final class Mrcpv2SynthesizedOutput
         }
     }
 
+    public void emptyQueue() {
+        LOGGER.info("Queue emptied.");
+        queueCount = 0;
+    }
+
     /**
      * {@inheritDoc}
      * 
@@ -516,7 +521,7 @@ public final class Mrcpv2SynthesizedOutput
             // fireOutputStarted(new SpeakablePlainText());
             // TODO Should there be a queue here in the client or over on the
             // server or both?
-            queueCount--;
+            if (queueCount > 0) queueCount--;
             LOGGER.info("Queue count decremented, now " + queueCount);
             synchronized (lock) {
                 lock.notifyAll();

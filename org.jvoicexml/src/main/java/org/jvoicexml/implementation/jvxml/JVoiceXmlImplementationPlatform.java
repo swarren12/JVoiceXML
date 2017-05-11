@@ -298,6 +298,7 @@ public final class JVoiceXmlImplementationPlatform
 
                 final SynthesizedOutput synthesizedOutput = systemOutput
                         .getSynthesizedOutput();
+                synthesizedOutput.emptyQueue();
                 returnExternalResourceToPool(synthesizerPool,
                         synthesizedOutput);
                 LOGGER.info("returned system output of type '" + type + "'");
@@ -540,7 +541,7 @@ public final class JVoiceXmlImplementationPlatform
             if (!hungup) {
                 // If the user did not hang up, wait until all output has been
                 // played.
-                waitOutputQueueEmpty();
+                // waitOutputQueueEmpty();
             }
         }
 
@@ -1041,6 +1042,7 @@ public final class JVoiceXmlImplementationPlatform
      */
     @Override
     public void queuePrompt(final SpeakableText speakable) {
+        waitOutputQueueEmpty();
         promptAccumulator.queuePrompt(speakable);
     }
 
