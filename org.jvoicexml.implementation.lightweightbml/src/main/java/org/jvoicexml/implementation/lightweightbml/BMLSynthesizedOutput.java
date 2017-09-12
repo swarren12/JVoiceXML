@@ -623,4 +623,10 @@ public final class BMLSynthesizedOutput
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void emptyQueue() {
+        // TODO Auto-generated method stub
+        
+    }
 }

@@ -367,4 +367,10 @@ final class TextSynthesizedOutput
             }
         }
     }
+
+    @Override
+    public void emptyQueue() {
+        // TODO Auto-generated method stub
+        
+    }
 }

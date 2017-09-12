@@ -638,4 +638,10 @@ public final class MarcSynthesizedOutput
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void emptyQueue() {
+        // TODO Auto-generated method stub
+        
+    }
 }

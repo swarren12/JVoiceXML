@@ -794,4 +794,10 @@ public final class Jsapi20SynthesizedOutput
             }
         }
     }
+
+    @Override
+    public void emptyQueue() {
+        // TODO Auto-generated method stub
+        
+    }
 }

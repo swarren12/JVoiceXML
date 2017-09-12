@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: "com.google.protobuf"
 apply plugin: 'maven'
+apply plugin: 'eclipse'
 
 buildscript {
     repositories {
@@ -66,4 +67,12 @@ jar {
                    "Implementation-Version": version)
     }
     baseName 'org.jvoicexml.client.text'
+}
+
+eclipse {
+    classpath {
+        file.whenMerged { cp ->
+            cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/proto/main/java', null) )
+        }
+    }
 }

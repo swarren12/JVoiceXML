@@ -440,4 +440,10 @@ public final class MarySynthesizedOutput
             }
         }
     }
+
+    @Override
+    public void emptyQueue() {
+        // TODO Auto-generated method stub
+        
+    }
 }
