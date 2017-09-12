@@ -411,6 +411,23 @@ public class JVoiceXmlUserAgent {
     }
 
     /**
+     * Processes a OPTIONS request.
+     * @param request the received request
+     * @throws ParseException
+     *         error parsing the status code
+     * @throws SipException
+     *         error sending the message
+     * @throws InvalidArgumentException
+     *         if the creation of the response is invalid
+     */
+    public void processOptions(final Request request)
+                    throws ParseException, SipException, InvalidArgumentException {
+        final Response response =
+                messageFactory.createResponse(Response.OK, request);
+    }
+    
+    
+    /**
      * Performs some cleanup of this user agent.
      * @throws SipException
      *         error cleaning up
