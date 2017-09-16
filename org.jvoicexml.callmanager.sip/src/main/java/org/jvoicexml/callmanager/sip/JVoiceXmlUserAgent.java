@@ -26,6 +26,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.TooManyListenersException;
 import java.util.Vector;
@@ -40,6 +41,7 @@ import javax.sdp.SessionName;
 import javax.sdp.TimeDescription;
 import javax.sdp.Version;
 import javax.sip.Dialog;
+import javax.sip.DialogState;
 import javax.sip.InvalidArgumentException;
 import javax.sip.ListeningPoint;
 import javax.sip.ServerTransaction;
@@ -52,6 +54,8 @@ import javax.sip.address.Address;
 import javax.sip.address.AddressFactory;
 import javax.sip.address.SipURI;
 import javax.sip.address.URI;
+import javax.sip.header.AcceptLanguageHeader;
+import javax.sip.header.AllowEventsHeader;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.FromHeader;
@@ -102,6 +106,9 @@ public class JVoiceXmlUserAgent {
     /** The server transaction that was created when processing the INVITE. */
     private ServerTransaction inviteTransaction;
 
+    /** The reuqest that was crated when processing the INVITE. */
+    private Request inviteRequest;
+    
     /** Listeners for this user agent. */
     private final Collection<UserAgentListener> listeners;
 
@@ -289,7 +296,8 @@ public class JVoiceXmlUserAgent {
         transaction.sendResponse(okResponse);
         LOGGER.info("sent 'OK' to '" + fromAddress + "'");
         inviteTransaction = transaction;
-
+        inviteRequest = request;
+        
         // Create a new session
         session = new SipSession();
         for (UserAgentListener listener : listeners) {
@@ -404,6 +412,7 @@ public class JVoiceXmlUserAgent {
         transaction.sendResponse(response);
         dialog = null;
         inviteTransaction = null;
+        inviteRequest = null;
         for (UserAgentListener listener : listeners) {
             listener.sessionDropped(session);
         }
@@ -415,17 +424,84 @@ public class JVoiceXmlUserAgent {
      * @param request the received request
      * @throws ParseException
      *         error parsing the status code
+     * @param transaction the transaction of the request
+     * @throws SipException
+     *         error sending the message
+     * @throws InvalidArgumentException
+     *         if the creation of the response is invalid
+     *         
+     *  Example of headers in response:       
+     *            
+     *  Allow: INVITE, ACK, CANCEL, OPTIONS, BYE
+     *  Accept: application/sdp
+     *  Accept-Encoding: gzip
+     *  Accept-Language: en
+     *  Supported: foo
+     *  Content-Type: application/sdp
+     *  Content-Length: 274
+     */
+    public void processOptions(final Request request,
+            final ServerTransaction transaction)
+                    throws ParseException, SipException, InvalidArgumentException, SdpException {
+        final Response okResponse =
+                messageFactory.createResponse(Response.OK, request);
+        ContentTypeHeader contentTypeHeader =
+                headerFactory.createContentTypeHeader("application", "sdp");
+        String sdp;
+        try {
+            
+            final Vector<MediaDescription> mediaDescriptions
+                = createMediaDescriptions(request);
+            final SessionDescription description =
+                    createSessionDescription(InetAddress.getLocalHost(), null,
+                            mediaDescriptions);
+            sdp = description.toString();
+        } catch (UnknownHostException e) {
+            throw new SdpException(e.getMessage(), e);
+        }
+        
+        final Locale bLocale = new Locale.Builder().setLanguage("en").setRegion("US").build();
+        final AcceptLanguageHeader acceptLangHeader = headerFactory.createAcceptLanguageHeader(bLocale);
+        final AllowEventsHeader allowEventsHeader = headerFactory.createAllowEventsHeader("INVITE, ACK, CANCEL, OPTIONS, BYE");
+        okResponse.addHeader(acceptLangHeader);
+        okResponse.addHeader(allowEventsHeader);
+        okResponse.setContent(sdp, contentTypeHeader);
+        transaction.sendResponse(okResponse);
+    }
+    
+
+    /**
+     * Processes a CANCEL request.
+     * @param request the received request
+     * @param transaction the transaction of the request
+     * @throws ParseException
+     *         error parsing the status code
      * @throws SipException
      *         error sending the message
      * @throws InvalidArgumentException
      *         if the creation of the response is invalid
      */
-    public void processOptions(final Request request)
+    public void processCancel(final Request request,
+            final ServerTransaction transaction)
                     throws ParseException, SipException, InvalidArgumentException {
         final Response response =
                 messageFactory.createResponse(Response.OK, request);
-    }
-    
+        transaction.sendResponse(response);
+        if (dialog != null && dialog.getState() != DialogState.CONFIRMED) {
+            if(inviteRequest != null && inviteTransaction != null){
+                final Response response2 = messageFactory.createResponse(Response.REQUEST_TERMINATED,
+                        inviteRequest);
+                inviteTransaction.sendResponse(response2);
+            }
+        }
+        dialog = null;
+        inviteTransaction = null;
+        inviteRequest = null;
+        for (UserAgentListener listener : listeners) {
+            listener.sessionDropped(session);
+        }
+        session = null;
+    }    
     
     /**
      * Performs some cleanup of this user agent.

@@ -94,7 +94,13 @@ public class JVoiceXmlSipListener implements SipListener {
                         event.getServerTransaction();
                 agent.processBye(request, transaction);
             } else if (method.equals(Request.OPTIONS)) {
-                agent.processOptions(request);
+                final ServerTransaction transaction =
+                        event.getServerTransaction();
+                agent.processOptions(request,transaction);
+            } else if (method.equals(Request.CANCEL)) {
+                final ServerTransaction transaction =
+                        event.getServerTransaction();                
+                agent.processCancel(request,transaction);
             }
         } catch (ParseException e) {
             LOGGER.error(e.getMessage(), e);
