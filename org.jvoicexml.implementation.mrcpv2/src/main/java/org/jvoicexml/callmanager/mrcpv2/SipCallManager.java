@@ -20,10 +20,17 @@
  */
 package org.jvoicexml.callmanager.mrcpv2;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.util.Map;
 
+import javax.json.Json;
 import javax.sip.Dialog;
 import javax.sip.ObjectInUseException;
 import javax.sip.SipException;
@@ -236,19 +243,7 @@ public final class SipCallManager
                 // Create a jvoicxml session and initiate a call at JVoiceXML.
                 final Session jsession = jvxml.createSession(remote);
 
-                // HALEF Event logging
-                final String hevent = String.format("INSERT INTO haleflogs"
-                    + " (databasedate, machineIP, machinedate, class, level,"
-                    + " message) VALUES(%s, \"%s\", %s,"
-                    + " \"%s\", \"%s\", \"%s\")", 
-                    "now()",
-                    System.getenv("IP"),
-                    "now()",
-                    "callmanager.mrcpv2.SipCallManager",
-                    "INFO",
-                    "created session " + jsession.getSessionID());
-                HalefDbWriter.execute(hevent);
-
+		HalefDbWriter.setLocalCallId(jsession.getSessionID());
                 
                 //add a listener to capture the end of voicexml session event
                 jsession.addSessionListener(this);
@@ -291,6 +286,7 @@ public final class SipCallManager
                 // randomCode use by client
                 final String remoteDisplayName = remoteParty.getDisplayName();
                 final String asteriskCallID;
+		final String isProduction;
                 if ((remoteDisplayName == null) || 
                     remoteDisplayName.startsWith("sip:")) {
                     final String uri = remoteParty.getURI().toString();
@@ -300,49 +296,100 @@ public final class SipCallManager
                     LOGGER.warn(String.format("The remote party display name seems to be an"
                                 + " invalid asterisk SIP callId (\"%s\")",
                                 asteriskCallID));
+		    isProduction = "false";
                 } else {
-                    asteriskCallID = remoteDisplayName;
+		    String[] parts = remoteDisplayName.split("\\|");
+		    if (parts.length != 2) {
+			asteriskCallID = "WRONG DIALPLAN";
+			isProduction = "WRONG DIALPLAN";
+			LOGGER.warn("DIALPLAN sets CALLERID(name) wrong.");
+		    } else {
+		    	asteriskCallID = parts[0];
+		    	isProduction = parts[1];
+		    }
                 }
-                final String jCallID = dialog.getCallId().getCallId();
-                final String cCallID = mrcpSession.getSipDialog().getCallId().getCallId();
-
-                LOGGER.info("Logging real-time mapping:\n%s %s %s",
-                            asteriskCallID,
-                            jCallID,
-                            jsession.getSessionID());
-                final String q = String.format("INSERT INTO realtime_jvxml_linklogs"
-                    + " (asteriskCallId, jvxmlCallId, jsessionId, cairoCallId, randomCode)"
-                    + " VALUES(\"%s\", \"%s\", \"%s\", \"%s\", \"%s\")", 
-                    asteriskCallID, 
-                    jCallID,
-                    jsession.getSessionID(),
-                    cCallID,
-                    randomCode);
-                HalefDbWriter.execute(q);
+                final String jCallID = dialog.getCallId().getCallId().split("@")[0];
+                final String cCallID = mrcpSession.getSipDialog().getCallId().getCallId().split("@")[0];
 
                 // Append the sessionId to the application uri
-                final String applicationUri = applications.get(calledNumber)
-                                              + "?sessionId="
+		final String appUri = applications.get(calledNumber);
+		String path = new URL(appUri).getPath();
+		path = path.replaceFirst("/", "");
+		String appName = path.split("/")[0];
+                final String applicationUri = appUri
+                                              + "?session_id="
                                               + jsession.getSessionID()
-                                              + "&randomCode=" 
-                                              + randomCode;
+                                              + "&client_session_id=" 
+                                              + randomCode
+					      + "&from_jvxml=yes";
+					     	
+
+		String requestContent;
+		
+		if (randomCode.equals("")) {
+			requestContent = Json.createObjectBuilder()
+				     .add("interaction_type_name", "CALL")
+				     .add("is_production", isProduction)
+				     .add("jvxml_session_id", jsession.getSessionID())
+				     .add("asterisk_call_id", asteriskCallID)
+				     .add("jvxml_call_id", jCallID)
+				     .add("jvxml_extension", calledNumber)
+				     .add("jvxml_server_ip", System.getenv("IP"))
+				     .add("cairo_call_id", cCallID)
+				     .add("cairo_server_ip", System.getenv("IP")).build().toString();
+		} else {
+			requestContent = Json.createObjectBuilder()
+				     .add("interaction_type_name", "CALL")
+				     .add("client_session_id", randomCode)
+				     .add("is_production", isProduction)
+				     .add("jvxml_session_id", jsession.getSessionID())
+				     .add("asterisk_call_id", asteriskCallID)
+				     .add("jvxml_call_id", jCallID)
+				     .add("jvxml_extension", calledNumber)
+				     .add("jvxml_server_ip", System.getenv("IP"))
+				     .add("cairo_call_id", cCallID)
+				     .add("cairo_server_ip", System.getenv("IP")).build().toString();
+		}
+		LOGGER.info("YYYYYYYYYYYYYYYYYYYYYY");
+		HttpURLConnection connection = null;
+		try {
+			URL url = new URL("http://loadbalancer.internal.org/ganesha/call_meta_insert");
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setUseCaches(false);
+			connection.setDoOutput(true);
+			DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+			wr.writeBytes(requestContent);
+			wr.flush();
+			wr.close();
+			InputStream is = connection.getInputStream();
+		        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+		        String line;
+		        StringBuffer response = new StringBuffer(); 
+		        while((line = rd.readLine()) != null) {
+		 		response.append(line);
+		       		response.append('\r');
+		        }
+		        rd.close();
+			int responseCode = connection.getResponseCode();
+			LOGGER.info("LOGGING RESPONSE CODE: " + Integer.toString(responseCode));
+		} catch ( Exception e) {
+			LOGGER.info(e.getMessage(), e);
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+
+
+		LOGGER.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+		LOGGER.info(requestContent);
+		
 
                 //use the number for looking up the application
                 LOGGER.info("called number: '" + calledNumber + "'");
                 LOGGER.info("calling application '" + applicationUri + "'...");
-
-                // HALEF Event logging
-                final String hevent2 = String.format("INSERT INTO haleflogs"
-                    + " (databasedate, machineIP, machinedate, class, level,"
-                    + " message) VALUES(%s, \"%s\", %s,"
-                    + " \"%s\", \"%s\", \"%s\")", 
-                    "now()",
-                    System.getenv("IP"),
-                    "now()",
-                    "callmanager.mrcpv2.SipCallManager",
-                    "INFO",
-                    "calling application '" + applicationUri + "'...");
-                HalefDbWriter.execute(hevent2);
 
                 //start the application
                 final URI uri = new URI(applicationUri);
