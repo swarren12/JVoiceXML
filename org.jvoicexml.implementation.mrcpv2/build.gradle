@@ -80,9 +80,9 @@ task xsltCallmanager(type: com.github.eerohele.SaxonXsltTask)  {
         buildpath: "${buildDir}/libs",
         version: version,
         libs: configurations.compile,
-        address: "sip:127.0.0.1:4245",
-        port: 4245,
-        cairoAddress: "sip:cairo@speechforge.org",
+        address: "sip:cairogate@speechforge.org",
+        port: 5090,
+        cairoAddress: "sip:cairo@127.0.0.1",
         cairoHost: "127.0.0.1",
         cairoPort: 5050
     )
