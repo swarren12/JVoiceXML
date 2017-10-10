@@ -153,20 +153,22 @@ public final class SipCallManager
             LOGGER.error("no session given. unable to cleanup session");
             return;
         }
-        session.getJvxmlSession().hangup();
-
+        
         try {
+            final SpeechClient client = session.getSpeechClient();
+            client.stopActiveRecognitionRequests();
+            client.shutdown();
+
             //need to check for null mrcp session (in speechcloud case it
             //will be null)
             final SipSession mrcpsession = session.getMrcpSession();
             if (mrcpsession != null) {
                 mrcpsession.bye();
             }
+            
             final SipSession pbxsession = session.getPbxSession();
             pbxsession.bye();
-            final SpeechClient client = session.getSpeechClient();
-            client.stopActiveRecognitionRequests();
-            client.shutdown();
+
         } catch (MrcpInvocationException e) {
             LOGGER.error(e.getMessage(), e);
         } catch (IOException e) {
@@ -178,6 +180,8 @@ public final class SipCallManager
         } catch (SipException e) {
             LOGGER.error(e.getMessage(), e);
         } 
+
+        session.getJvxmlSession().hangup();
         
         //TODO Clean up after telephony client?
         //session.getTelephonyClient();
