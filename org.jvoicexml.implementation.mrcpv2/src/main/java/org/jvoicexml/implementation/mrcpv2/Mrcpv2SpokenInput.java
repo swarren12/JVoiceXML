@@ -282,19 +282,6 @@ public final class Mrcpv2SpokenInput
             // TODO load the application type from the grammar
             LOGGER.info(String.format("Starting recognition with url: %s", firstGrammarDocument.getDocument()));
 
-            // HALEF Event logging
-            final String hevent = String.format("INSERT INTO haleflogs"
-                + " (databasedate, machineIP, machinedate, class, level,"
-                + " message) VALUES(%s, \"%s\", %s,"
-                + " \"%s\", \"%s\", \"%s\")", 
-                "now()",
-                System.getenv("IP"),
-                "now()",
-                "implementation.mrcpv2.Mrcpv2SpokenInput",
-                "INFO",
-                "Starting recognition with url: " + firstGrammarDocument.getDocument());
-            HalefDbWriter.execute(hevent);
-
             speechClient.setContentType("application/wfst");
             speechClient.recognize(
                     firstGrammarDocument.getDocument(), hotword,

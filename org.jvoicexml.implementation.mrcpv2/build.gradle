@@ -36,15 +36,14 @@ configurations.all {
 }
 
 dependencies {
-  compile group: 'javax.json', name: 'javax.json-api', version: '1.1'
-  compile group: 'org.glassfish', name: 'javax.json', version: '1.1'
-    compile group: 'net.sourceforge.halef', name: 'cairo-client', version: '0.2-SNAPSHOT'
+    compile group: 'javax.json', name: 'javax.json-api', version: '1.1'
+    compile group: 'org.glassfish', name: 'javax.json', version: '1.1'
+    compile group: 'net.sourceforge.halef', name: 'cairo-client', version: '0.3-SNAPSHOT'
     compile fileTree(dir: './3rdparty/speechcloud/lib', include: ['*.jar'])
-    compile group: 'net.sourceforge.halef', name: 'cairo-sip', version: '0.2-SNAPSHOT'
-    compile group: 'net.sourceforge.halef', name: 'cairo-rtp', version: '0.2-SNAPSHOT'
+    compile group: 'net.sourceforge.halef', name: 'cairo-sip', version: '0.3-SNAPSHOT'
+    compile group: 'net.sourceforge.halef', name: 'cairo-rtp', version: '0.3-SNAPSHOT'
     compile group: 'net.sourceforge.halef', name: 'halef-mrcp4j', version: '0.1-SNAPSHOT'
-    compile group: 'net.sourceforge.halef', name: 'halefdbwriter', version: '0.0.1-SNAPSHOT'
-    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.40'
+    compile group: 'net.sourceforge.halef', name: 'halefdbwriter', version: '0.0.2-SNAPSHOT'
     //compile group: 'net.sourceforge.halef', name: 'halef-zanzibar', version: '0.1-SNAPSHOT'
     compile fileTree(dir: './3rdparty/zanzibar/lib', include: ['*.jar'])
     compile group: 'javax.sip', name: 'jain-sip-api', version: '1.2.1.4'
@@ -108,7 +107,6 @@ task copyReferencedLibraries(type: Copy) {
          'jmf*.jar',
          'log4j*.jar',
          'halefdbwriter*.jar',
-         'mysql-connector-java*.jar',
          'javax.json*'
     }
 }

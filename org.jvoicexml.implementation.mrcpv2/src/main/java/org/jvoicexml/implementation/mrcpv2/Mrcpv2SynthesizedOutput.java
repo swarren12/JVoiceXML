@@ -232,29 +232,9 @@ public final class Mrcpv2SynthesizedOutput
             if (urlPrompt) {
                 LOGGER.info(String.format("Using URL!: %s", speakText));
 
-                // HALEF Event logging
-                final String hevent = String.format(
-                        "INSERT INTO haleflogs"
-                                + " (databasedate, machineIP, machinedate, class, level,"
-                                + " message) VALUES(%s, \"%s\", %s,"
-                                + " \"%s\", \"%s\", \"%s\")",
-                        "now()", System.getenv("IP"), "now()",
-                        "implementation.mrcpv2.Mrcpv2SynthesizedOutput", "INFO",
-                        "Using URL!: " + speakText);
-                HalefDbWriter.execute(hevent);
             } else {
                 LOGGER.info(String.format("Using TTS!: %s", speakText));
 
-                // HALEF Event logging
-                final String hevent = String.format(
-                        "INSERT INTO haleflogs"
-                                + " (databasedate, machineIP, machinedate, class, level,"
-                                + " message) VALUES(%s, \"%s\", %s,"
-                                + " \"%s\", \"%s\", \"%s\")",
-                        "now()", System.getenv("IP"), "now()",
-                        "implementation.mrcpv2.Mrcpv2SynthesizedOutput", "INFO",
-                        "Using TTS!: " + speakText);
-                HalefDbWriter.execute(hevent);
             }
 
             speechClient.queuePrompt(urlPrompt, speakText);
