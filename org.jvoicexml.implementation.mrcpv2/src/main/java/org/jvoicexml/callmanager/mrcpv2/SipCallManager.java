@@ -324,7 +324,7 @@ public final class SipCallManager
                                           + jsession.getSessionID()
                                           + "&client_session_id="
                                           + randomCode
-                                          + "&from_jvxml=yes";
+                                          + "&origin=jvoicexml";
 
 
             String requestContent;
