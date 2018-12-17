@@ -211,6 +211,9 @@ public class SrgsSisrGrammar
                                 + grammarNode;
             final StringReader reader = new StringReader(xml);
             final InputSource source = new InputSource(reader);
+            if (uri != null)
+                source.setSystemId(uri.toString());
+
             return new SrgsXmlDocument(source);
         } catch (ParserConfigurationException | SAXException | IOException e) {
             LOGGER.error("unable to create grammar document", e);
