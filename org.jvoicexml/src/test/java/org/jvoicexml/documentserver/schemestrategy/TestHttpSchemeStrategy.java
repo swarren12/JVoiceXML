@@ -38,7 +38,6 @@ import java.util.Collections;
 
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,8 +64,7 @@ public final class TestHttpSchemeStrategy {
     private static final String BASE_URL = "http://example.com:8080";
     private static final long TIMEOUT = 0;
 
-    @Mock private SessionStorage<HttpClientBuilder> sessionStorage;
-    @Mock private HttpClientBuilder httpClientBuilder;
+    @Mock private SessionStorage<CloseableHttpClient> sessionStorage;
     @Mock private CloseableHttpClient httpClient;
     @Captor private ArgumentCaptor<HttpUriRequest> httpRequestCaptor;
 
@@ -77,8 +75,7 @@ public final class TestHttpSchemeStrategy {
 
     @Before
     public void initSessionStorage() throws Exception {
-        when(sessionStorage.getSessionIdentifier(SESSION_ID)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.build()).thenReturn(httpClient);
+        when(sessionStorage.getSessionIdentifier(SESSION_ID)).thenReturn(httpClient);
         when(httpClient.execute(any())).thenReturn(new MockHttpResponse());
         HttpSchemeStrategy.SESSION_STORAGE = sessionStorage;
     }

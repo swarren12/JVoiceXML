@@ -35,9 +35,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
@@ -73,7 +75,7 @@ public final class HttpSchemeStrategy implements SchemeStrategy {
     public static final String HTTP_SCHEME_NAME = "http";
 
     /** the storage of session identifiers. */
-    protected static SessionStorage<HttpClientBuilder> SESSION_STORAGE;
+    protected static SessionStorage<CloseableHttpClient> SESSION_STORAGE;
 
     /** Scheme name for this strategy. */
     private String scheme;
@@ -82,8 +84,8 @@ public final class HttpSchemeStrategy implements SchemeStrategy {
     private int defaultFetchTimeout;
 
     static {
-        final SessionIdentifierFactory<HttpClientBuilder> factory = new HttpClientSessionIdentifierFactory();
-        SESSION_STORAGE = new SessionStorage<HttpClientBuilder>(factory);
+        final SessionIdentifierFactory<CloseableHttpClient> factory = new HttpClientSessionIdentifierFactory();
+        SESSION_STORAGE = new SessionStorage<CloseableHttpClient>(factory);
     }
 
     /**
@@ -134,23 +136,22 @@ public final class HttpSchemeStrategy implements SchemeStrategy {
     public InputStream getInputStream(final String sessionId, final URI uri,
             final RequestMethod method, final long timeout,
             final Collection<KeyValuePair> parameters) throws BadFetchError {
-        final HttpClientBuilder builder = SESSION_STORAGE
-                .getSessionIdentifier(sessionId);
         final RequestConfig config = setTimeout(timeout);
-        try (CloseableHttpClient client = builder
-                .setDefaultRequestConfig(config).build()) {
+        try (CloseableHttpClient client = SESSION_STORAGE
+                .getSessionIdentifier(sessionId)) {
             final String fragmentLessUriString = StringUtils.substringBeforeLast(uri.toString(), "#");
             final URI fragmentLessUri = new URI(fragmentLessUriString);
             final URI requestUri = addParameters(parameters, fragmentLessUri);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("connecting to '" + requestUri + "'...");
             }
-            final HttpUriRequest request;
+            final HttpRequestBase request;
             if (method == RequestMethod.GET) {
                 request = new HttpGet(requestUri);
             } else {
                 request = new HttpPost(requestUri);
             }
+            request.setConfig(config);
             attachFiles(request, parameters);
             final HttpResponse response = client.execute(request);
             final StatusLine statusLine = response.getStatusLine();

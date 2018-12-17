@@ -22,6 +22,7 @@
 package org.jvoicexml.documentserver.schemestrategy;
 
 import org.apache.http.HttpHost;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
@@ -31,7 +32,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * @since 0.7
  */
 final class HttpClientSessionIdentifierFactory
-        implements SessionIdentifierFactory<HttpClientBuilder> {
+        implements SessionIdentifierFactory<CloseableHttpClient> {
     /** The default proxy port. */
     private static final int DEFAULT_PROXY_PORT = 80;
 
@@ -55,13 +56,13 @@ final class HttpClientSessionIdentifierFactory
      * {@inheritDoc}
      */
     @Override
-    public HttpClientBuilder createSessionIdentifier(final String sessionId) {
+    public CloseableHttpClient createSessionIdentifier(final String sessionId) {
         final HttpClientBuilder builder = HttpClientBuilder.create();
         if (PROXY_HOST != null) {
             HttpHost proxy = new HttpHost(PROXY_HOST, PROXY_PORT);
             builder.setProxy(proxy);
         }
-        return builder;
+        return builder.build();
     }
 
 }
