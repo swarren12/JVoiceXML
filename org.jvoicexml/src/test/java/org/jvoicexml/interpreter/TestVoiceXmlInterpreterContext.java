@@ -31,11 +31,7 @@ import java.net.URI;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.jvoicexml.Configuration;
-import org.jvoicexml.DocumentDescriptor;
-import org.jvoicexml.ImplementationPlatform;
-import org.jvoicexml.JVoiceXmlCore;
-import org.jvoicexml.SpeechRecognizerProperties;
+import org.jvoicexml.*;
 import org.jvoicexml.documentserver.JVoiceXmlDocumentServer;
 import org.jvoicexml.documentserver.jetty.DocumentStorage;
 import org.jvoicexml.documentserver.schemestrategy.DocumentMap;
@@ -48,6 +44,8 @@ import org.jvoicexml.profile.SsmlParsingStrategyFactory;
 import org.jvoicexml.xml.vxml.VoiceXmlDocument;
 import org.mockito.Mockito;
 import org.w3c.dom.Document;
+
+import static org.mockito.Mockito.when;
 
 /**
  * Test cases for {@link VoiceXmlInterpreterContext}.
@@ -87,13 +85,13 @@ public final class TestVoiceXmlInterpreterContext {
         final Profile profile = Mockito.mock(Profile.class);
         final SsmlParsingStrategyFactory factory = Mockito
                 .mock(SsmlParsingStrategyFactory.class);
-        Mockito.when(profile.getSsmlParsingStrategyFactory()).thenReturn(
+        when(profile.getSsmlParsingStrategyFactory()).thenReturn(
                 factory);
 
         final JVoiceXmlSession session = new JVoiceXmlSession(platform, jvxml,
                 null, profile);
         final Configuration configuration = Mockito.mock(Configuration.class);
-        Mockito.when(configuration.loadObject(SpeechRecognizerProperties.class))
+        when(configuration.loadObject(SpeechRecognizerProperties.class))
                 .thenReturn(new SpeechRecognizerProperties());
         context = new VoiceXmlInterpreterContext(session, configuration);
     }
@@ -114,6 +112,48 @@ public final class TestVoiceXmlInterpreterContext {
         final URI uri = map.getUri("/test");
         map.addDocument(uri, document);
         final DocumentDescriptor descriptor = new DocumentDescriptor(uri);
+        final Document retrievedDocument = context.loadDocument(descriptor);
+        Assert.assertEquals(document.toString(), retrievedDocument.toString());
+    }
+
+    /**
+     * Test method for
+     * {@link org.jvoicexml.interpreter.VoiceXmlInterpreterContext#loadDocument(org.jvoicexml.DocumentDescriptor)}
+     * .
+     *
+     * @exception Exception
+     *                test failed
+     * @exception JVoiceXMLEvent
+     *                test failed
+     */
+    @Test
+    public void testLoadDocumentRemoteForm() throws Exception, JVoiceXMLEvent {
+        final VoiceXmlDocument document = new VoiceXmlDocument();
+        final URI uri = map.getUri("/test#someform");
+        map.addDocument(uri, document);
+        final DocumentDescriptor descriptor = new DocumentDescriptor(uri);
+        final Document retrievedDocument = context.loadDocument(descriptor);
+        Assert.assertEquals(document.toString(), retrievedDocument.toString());
+    }
+
+    /**
+     * Test method for
+     * {@link org.jvoicexml.interpreter.VoiceXmlInterpreterContext#loadDocument(org.jvoicexml.DocumentDescriptor)}
+     * .
+     *
+     * @exception Exception
+     *                test failed
+     * @exception JVoiceXMLEvent
+     *                test failed
+     */
+    @Test
+    public void testLoadDocumentLocalForm() throws Exception, JVoiceXMLEvent {
+        final VoiceXmlDocument document = new VoiceXmlDocument();
+        final Application application = Mockito.mock(Application.class);
+        when(application.getCurrentDocument()).thenReturn(document);
+        context.setApplication(application);
+
+        final DocumentDescriptor descriptor = new DocumentDescriptor(URI.create("#someform"));
         final Document retrievedDocument = context.loadDocument(descriptor);
         Assert.assertEquals(document.toString(), retrievedDocument.toString());
     }

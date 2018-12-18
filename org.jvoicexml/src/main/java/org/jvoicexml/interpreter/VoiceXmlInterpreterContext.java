@@ -677,8 +677,13 @@ public class VoiceXmlInterpreterContext {
      */
     public VoiceXmlDocument loadDocument(final DocumentDescriptor descriptor)
             throws BadFetchError {
-        final VoiceXmlDocument doc = acquireVoiceXmlDocument(descriptor);
         final URI uri = descriptor.getUri();
+        if (isLocalDocumentURI(uri)) {
+            LOGGER.debug("URI '{}' is for a local form - returning the current document");
+            return application.getCurrentDocument();
+        }
+
+        final VoiceXmlDocument doc = acquireVoiceXmlDocument(descriptor);
         if (application != null) {
             final URI resolvedUri = application.resolve(uri);
             application.addDocument(resolvedUri, doc);
@@ -856,4 +861,19 @@ public class VoiceXmlInterpreterContext {
         }
         LOGGER.info("...done initializing document");
     }
+
+    /**
+     * Check if the specified {@link URI} is to a local form item.
+     *
+     * More specifically, check if the given {@link URI} does not contain
+     * a "scheme specific part" and does contain a fragment.
+     * @param uri the {@link URI} to test
+     * @return {@literal true} if the {@link URI} appears to be a local form; {@literal false otherwise}
+     */
+    private boolean isLocalDocumentURI(URI uri) {
+        return uri != null
+                && (uri.getSchemeSpecificPart() != null && uri.getSchemeSpecificPart().isEmpty())
+                && (uri.getFragment() != null && !uri.getFragment().isEmpty());
+    }
+
 }
