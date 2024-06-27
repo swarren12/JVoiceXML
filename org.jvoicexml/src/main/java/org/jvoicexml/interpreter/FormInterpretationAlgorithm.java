@@ -195,6 +195,9 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
     /** The call properties to use with the next input or output. */
     private CallControlProperties callProperties;
     
+    /** {@code true} if the dialog is a subdialog. */
+    private boolean processingSubdialog;
+
     /**
      * Construct a new FIA object.
      *
@@ -264,11 +267,15 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
      *            the profile
      * @param parameters
      *            passed parameters when executing this dialog
+     * @param isSubdialog
+     *          <code>true</code> if this is a subdialog
      * @throws JVoiceXMLEvent
      *             Error initializing the {@link FormItem}s.
      */
     public void initialize(final Profile prof,
-            final Map<String, Object> parameters) throws JVoiceXMLEvent {
+            final Map<String, Object> parameters, final boolean isSubdialog)
+                    throws JVoiceXMLEvent {
+        processingSubdialog = isSubdialog;
         profile = prof;
         if (profile == null) {
             throw new BadFetchError("No profile given."
@@ -508,8 +515,13 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
                             + "'...");
                 } catch (ConnectionDisconnectEvent | CancelEvent
                         | ExitEvent e) {
+                    if (processingSubdialog) {
+                        LOGGER.info("forwarding event to parent dialog '" 
+                                + e.getEventType() + "'");
+                        throw e;
+                    }
                     // Similar to the catch below but terminating processing
-                    LOGGER.debug("caught hangup event while processing '"
+                    LOGGER.info("caught hangup event while processing '"
                             + e.getEventType() + "'");
                     final EventBus eventbus = context.getEventBus();
                     eventbus.publish(e);
@@ -528,6 +540,12 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
                         gotoFormItemName = ie.getItem();
                         LOGGER.info("going to form item '" + gotoFormItemName
                                 + "'...");
+                    } catch (JVoiceXMLEvent event) {
+                        if (processingSubdialog) {
+                            LOGGER.info("forwarding event to parent dialog '" 
+                                    + event.getEventType() + "'");
+                            throw event;
+                        }
                     } finally {
                         final EventHandler handler = context.getEventHandler();
                         handler.clean(item);
@@ -776,6 +794,11 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
             // Check if something bad happened in the collect phase
             event = handler.checkEvent();
             if (event != null) {
+                if (isInputItem) {
+                    final String name = formItem.getName();
+                    final DataModel model = context.getDataModel();
+                    model.updateVariable(name, event);
+                }
                 throw event;
             }
         }
