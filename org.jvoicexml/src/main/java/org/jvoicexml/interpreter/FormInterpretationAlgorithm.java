@@ -84,7 +84,6 @@ import org.jvoicexml.xml.VoiceXmlNode;
 import org.jvoicexml.xml.XmlNode;
 import org.jvoicexml.xml.srgs.Grammar;
 import org.jvoicexml.xml.srgs.ModeType;
-import org.jvoicexml.xml.vxml.Param;
 import org.jvoicexml.xml.vxml.Prompt;
 import org.jvoicexml.xml.vxml.VoiceXmlDocument;
 
@@ -795,9 +794,7 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
             event = handler.checkEvent();
             if (event != null) {
                 if (isInputItem) {
-                    final String name = formItem.getName();
-                    final DataModel model = context.getDataModel();
-                    model.updateVariable(name, event);
+                    markInputItemVisited(formItem, event);
                 }
                 throw event;
             }
@@ -808,12 +805,7 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
                 .getImplementationPlatform();
         final boolean hasUserInput = platform.isUserInputActive();
         if (hasUserInput) {
-            final UserInput userInput = platform.getUserInput();
-            final ActiveGrammarSet activeGrammars =
-                    context.getActiveGrammarSet();
-            final Collection<ModeType> types =
-                    activeGrammars.getModeTypes();
-            userInput.stopRecognition(types);
+            stopRecognition(platform);
         }
         final CallControl call = platform.getCallControl();
         if (call != null) {
@@ -840,15 +832,57 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
         if (reprompt) {
             LOGGER.info("reprompt: clearing all just filled elements");
             // Clear all just-filled attributes
-            final DataModel model = context.getDataModel();
-            for (InputItem input : justFilled) {
-                final String name = input.getName();
-                int rc = model.deleteVariable(name);
-                if (rc != DataModel.NO_ERROR) {
-                    LOGGER.warn("error deleting variable '" + name + "': "
-                            + model.errorCodeToString(rc));
-                }
+            clearAllJustFilledAttributes();
+        }
+    }
+
+    /**
+     * Clears all just filled attributes.
+     */
+    private void clearAllJustFilledAttributes() {
+        final DataModel model = context.getDataModel();
+        for (InputItem input : justFilled) {
+            final String name = input.getName();
+            int rc = model.deleteVariable(name);
+            if (rc != DataModel.NO_ERROR) {
+                LOGGER.warn("error deleting variable '" + name + "': "
+                        + model.errorCodeToString(rc));
             }
+        }
+    }
+
+    /**
+     * Stops the recognition of the current input items.
+     * @param platform the  implementation platform
+     * @throws NoresourceError
+     *          the resource could not be obtained
+     * @throws ConnectionDisconnectHangupEvent
+     *          the user hung up
+     */
+    private void stopRecognition(final ImplementationPlatform platform)
+            throws NoresourceError, ConnectionDisconnectHangupEvent {
+        final UserInput userInput = platform.getUserInput();
+        final ActiveGrammarSet activeGrammars =
+                context.getActiveGrammarSet();
+        final Collection<ModeType> types =
+                activeGrammars.getModeTypes();
+        userInput.stopRecognition(types);
+    }
+
+    /**
+     * Marks the input item as visited by setting the form item variable to the
+     * event that caused the visit.
+     * @param formItem the input item
+     * @param event the caught event
+     */
+    private void markInputItemVisited(final FormItem formItem,
+            final JVoiceXMLEvent event) {
+        final String name = formItem.getName();
+        final DataModel model = context.getDataModel();
+        int rc = model.updateVariable(name, event);
+        if (rc != DataModel.NO_ERROR) {
+            LOGGER.warn("error marking input item as visited '" + name + "': "
+                    + model.errorCodeToString(rc));
         }
     }
 
