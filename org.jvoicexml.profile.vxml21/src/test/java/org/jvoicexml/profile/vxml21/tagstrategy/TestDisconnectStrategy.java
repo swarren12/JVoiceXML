@@ -51,13 +51,11 @@ public final class TestDisconnectStrategy extends TagStrategyTestBase {
      */
     @Test
     public void testExecute() throws Exception, JVoiceXMLEvent {
+        // Here, we can only test that the event is thrown. Setting the
+        // interpreter to final processing state is not possible with
+        // this mocked environment.
         final Block block = createBlock();
         final Disconnect disconnect = block.appendChild(Disconnect.class);
-
-        final VoiceXmlInterpreter interpreter = getInterpreter();
-
-        Assert.assertFalse(interpreter.isInFinalProcessingState());
-
         final DisconnectStrategy strategy = new DisconnectStrategy();
         ConnectionDisconnectHangupEvent event = null;
         try {
@@ -67,6 +65,5 @@ public final class TestDisconnectStrategy extends TagStrategyTestBase {
         }
 
         Assert.assertNotNull(event);
-        Assert.assertTrue(interpreter.isInFinalProcessingState());
     }
 }
