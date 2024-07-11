@@ -123,7 +123,8 @@ final class SubdialogExecutorThread extends Thread {
             }
             final ImplementationPlatform platform = context
                     .getImplementationPlatform();
-            platform.setEventBus(eventbus);
+            final EventBus bus = context.getEventBus();
+            platform.setEventBus(bus);
             final DocumentServer server = context.getDocumentServer();
             // TODO use the correct call properties
             platform.playPrompts(server, null);

@@ -514,14 +514,11 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
                             + "'...");
                 } catch (ConnectionDisconnectEvent | CancelEvent
                         | ExitEvent e) {
-                    if (processingSubdialog) {
-                        LOGGER.info("forwarding event to parent dialog '" 
-                                + e.getEventType() + "'");
-                        throw e;
-                    }
                     // Similar to the catch below but terminating processing
                     LOGGER.info("caught hangup event while processing '"
                             + e.getEventType() + "'");
+                    // There is per se no next item
+                    item = null;
                     final EventBus eventbus = context.getEventBus();
                     eventbus.publish(e);
                     processEvent(e);
@@ -611,8 +608,8 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
      * @param event
      *            the event to process.
      * @exception JVoiceXMLEvent
-     *                the input event if the handler was not able to process the
-     *                given event.
+     *                the received event if the handler was not able to process
+     *                the given event.
      * @since 0.7
      */
     void processEvent(final JVoiceXMLEvent event) throws JVoiceXMLEvent {
@@ -793,9 +790,6 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
             // Check if something bad happened in the collect phase
             event = handler.checkEvent();
             if (event != null) {
-                if (isInputItem) {
-                    markInputItemVisited(formItem, event);
-                }
                 throw event;
             }
         }
@@ -867,23 +861,6 @@ public final class FormInterpretationAlgorithm implements FormItemVisitor {
         final Collection<ModeType> types =
                 activeGrammars.getModeTypes();
         userInput.stopRecognition(types);
-    }
-
-    /**
-     * Marks the input item as visited by setting the form item variable to the
-     * event that caused the visit.
-     * @param formItem the input item
-     * @param event the caught event
-     */
-    private void markInputItemVisited(final FormItem formItem,
-            final JVoiceXMLEvent event) {
-        final String name = formItem.getName();
-        final DataModel model = context.getDataModel();
-        int rc = model.updateVariable(name, event);
-        if (rc != DataModel.NO_ERROR) {
-            LOGGER.warn("error marking input item as visited '" + name + "': "
-                    + model.errorCodeToString(rc));
-        }
     }
 
     /**

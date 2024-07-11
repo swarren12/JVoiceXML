@@ -113,7 +113,8 @@ public final class VoiceXmlInterpreter {
      * @since 0.6
      */
     public void setState(final InterpreterState newState) {
-        if (state == newState) {
+        if ((state == newState)
+                || (state == InterpreterState.FINALPROCESSING)) {
             return;
         }
         state = newState;
@@ -240,10 +241,17 @@ public final class VoiceXmlInterpreter {
         nextDialog = null;
         fia = new FormInterpretationAlgorithm(context, this, dialog);
         final EventBus eventbus = context.getEventBus();
-        final HangupEventHandler hangupHandler = new HangupEventHandler(this);
-        eventbus.subscribe(ConnectionDisconnectHangupEvent.EVENT_TYPE,
-                hangupHandler);
-
+        final HangupEventHandler hangupHandler;
+        if (!isSubdialog) {
+            // In case of a subdialog the hangup event should be forwarded to
+            // the parent dialog.
+            // So do not register a hangup handler.
+            hangupHandler = new HangupEventHandler(this);
+            eventbus.subscribe(ConnectionDisconnectHangupEvent.EVENT_TYPE,
+                    hangupHandler);
+        } else {
+            hangupHandler = null;
+        }
         // Collect dialog level catches.
         final EventHandler eventHandler = context.getEventHandler();
         eventHandler.collect(context, this, dialog);
@@ -267,8 +275,10 @@ public final class VoiceXmlInterpreter {
             }
         } finally {
             fia = null;
-            eventbus.subscribe(ConnectionDisconnectHangupEvent.EVENT_TYPE,
-                    hangupHandler);
+            if (hangupHandler != null) {
+                eventbus.unsubscribe(ConnectionDisconnectHangupEvent.EVENT_TYPE,
+                        hangupHandler);
+            }
         }
     }
 
