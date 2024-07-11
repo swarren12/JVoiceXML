@@ -34,6 +34,7 @@ import org.jvoicexml.event.EventBus;
 import org.jvoicexml.event.JVoiceXMLEvent;
 import org.jvoicexml.event.error.SemanticError;
 import org.jvoicexml.event.error.jvxml.ExceptionWrapper;
+import org.jvoicexml.event.plain.ConnectionDisconnectEvent;
 import org.jvoicexml.event.plain.jvxml.ReturnEvent;
 import org.jvoicexml.event.plain.jvxml.SubdialogResultEvent;
 import org.jvoicexml.interpreter.datamodel.DataModel;
@@ -132,7 +133,13 @@ final class SubdialogExecutorThread extends Thread {
                     new SubdialogResultEvent(result);
             eventbus.publish(resultEvent);
         } catch (JVoiceXMLEvent e) {
-            LOGGER.warn("Caught JVoiceXMLEvent in subdialog", e);
+            final String eventType = e.getEventType();
+            if (eventType.startsWith(ConnectionDisconnectEvent.EVENT_TYPE)) {
+                LOGGER.warn("Caught JVoiceXMLEvent in subdialog: "
+                    + e.getEventType());
+            } else {
+                LOGGER.warn("Caught JVoiceXMLEvent in subdialog", e);
+            }
             eventbus.publish(e);
         } catch (Exception e) {
             LOGGER.error("Caught error in subdialog", e);
