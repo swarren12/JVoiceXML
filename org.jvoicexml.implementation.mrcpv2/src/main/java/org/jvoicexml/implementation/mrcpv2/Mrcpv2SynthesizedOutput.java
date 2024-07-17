@@ -366,6 +366,14 @@ public final class Mrcpv2SynthesizedOutput
      * {@inheritDoc}
      */
     @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+        LOGGER.warn("flushBufferedPrompts not implemented");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void waitNonBargeInPlayed() {
         waitQueueEmpty();
     }

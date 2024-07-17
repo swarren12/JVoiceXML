@@ -327,6 +327,33 @@ public final class Jsapi20SynthesizedOutput
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+        if (synthesizer == null) {
+            throw new NoresourceError("no synthesizer: cannot cancel output");
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("flushing buffered prompts.");
+        }
+        synchronized (queuedSpeakables) {
+            if (queuedSpeakables.isEmpty()) {
+                return;
+            }
+            queuedSpeakables.clear();
+        }
+        // Cancel ongoing speech
+        synthesizer.cancelAll();
+
+        // Notify listeners that the queue is empty
+        fireQueueEmpty();
+        synchronized (emptyLock) {
+            emptyLock.notifyAll();
+        }
+    }
+    
+    /**
      * Queues the speakable SSML formatted text.
      * 
      * @param ssmlText

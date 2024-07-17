@@ -246,7 +246,7 @@ public final class VoiceXmlInterpreter {
             // In case of a subdialog the hangup event should be forwarded to
             // the parent dialog.
             // So do not register a hangup handler.
-            hangupHandler = new HangupEventHandler(this);
+            hangupHandler = new HangupEventHandler(context, this);
             eventbus.subscribe(ConnectionDisconnectHangupEvent.EVENT_TYPE,
                     hangupHandler);
         } else {

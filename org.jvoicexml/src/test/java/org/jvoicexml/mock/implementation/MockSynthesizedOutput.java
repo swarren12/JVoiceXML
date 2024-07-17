@@ -153,6 +153,13 @@ public final class MockSynthesizedOutput implements SynthesizedOutput {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     public boolean isBusy() {
         return !speakables.isEmpty();
     }

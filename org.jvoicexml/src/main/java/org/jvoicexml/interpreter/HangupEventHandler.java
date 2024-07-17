@@ -22,8 +22,11 @@ package org.jvoicexml.interpreter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jvoicexml.ImplementationPlatform;
+import org.jvoicexml.SystemOutput;
 import org.jvoicexml.event.EventSubscriber;
 import org.jvoicexml.event.JVoiceXMLEvent;
+import org.jvoicexml.event.error.NoresourceError;
 import org.jvoicexml.event.plain.ConnectionDisconnectHangupEvent;
 
 /**
@@ -36,14 +39,20 @@ public class HangupEventHandler implements EventSubscriber {
     private static final Logger LOGGER = LogManager
             .getLogger(HangupEventHandler.class);
 
+    /** The context of the current VoiceXML interpreter. */
+    private final VoiceXmlInterpreterContext context;
+
     /** The used form {@link VoiceXmlInterpreter}. */
     private final VoiceXmlInterpreter interpreter;
 
     /**
      * Creates a new object.
+     * @param ctx the context of the current VoiceXML interpreter
      * @param ip the VoiceXML interpreter to use
      */
-    public HangupEventHandler(final VoiceXmlInterpreter ip) {
+    public HangupEventHandler(final VoiceXmlInterpreterContext ctx, 
+            final VoiceXmlInterpreter ip) {
+        context = ctx;
         interpreter = ip;
     }
     
@@ -61,6 +70,17 @@ public class HangupEventHandler implements EventSubscriber {
         LOGGER.info("received hangup event '" + event 
                 + "'. Entering final processing state");
         interpreter.setState(InterpreterState.FINALPROCESSING);
+        final ImplementationPlatform platform =
+                context.getImplementationPlatform();
+        try {
+            LOGGER.info("flushing buffered prompts");
+            final SystemOutput output = platform.getSystemOutput();
+            output.flushBufferedPrompts();
+            // Mark the user as hung up to avoid any further queuing of prompts
+            platform.setUserHungup();
+        } catch (ConnectionDisconnectHangupEvent | NoresourceError e) {
+            LOGGER.warn("error while trying to flush prompt buffers", e);
+        }
     }
 
 }

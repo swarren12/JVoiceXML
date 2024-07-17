@@ -112,6 +112,14 @@ final class JVoiceXmlSystemOutput
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+        synthesizedOutput.flushBufferedPrompts();
+    }
+
+    /**
      * Adds the given listener for output events.
      * @param listener the listener to add
      */

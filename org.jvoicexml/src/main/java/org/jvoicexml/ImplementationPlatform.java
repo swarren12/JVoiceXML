@@ -157,6 +157,12 @@ public interface ImplementationPlatform {
     boolean isHungup();
 
     /**
+     * The user hung up.
+     * @since 0.7.9
+     */
+    void setUserHungup();
+    
+    /**
      * Closes all open resources.
      */
     void close();

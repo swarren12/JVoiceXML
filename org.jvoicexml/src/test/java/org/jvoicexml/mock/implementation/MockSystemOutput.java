@@ -85,6 +85,14 @@ public final class MockSystemOutput implements SystemOutput {
      * {@inheritDoc}
      */
     @Override
+    public void flushBufferedPrompts()
+            throws NoresourceError {
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void queueSpeakable(final SpeakableText speakableText,
             final SessionIdentifier id, final DocumentServer documentServer)
         throws NoresourceError, BadFetchError {

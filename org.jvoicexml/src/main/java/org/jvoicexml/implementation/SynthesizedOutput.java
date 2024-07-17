@@ -93,7 +93,15 @@ public interface SynthesizedOutput extends ExternalResource, OutputDevice {
             DocumentServer server, CallControlProperties callProps)
             throws BadFetchError, NoresourceError,
                 ConnectionDisconnectHangupEvent;
-    
+
+    /**
+     * Flushes the prompt queue. Afterwards an empty queue is guaranteed.
+     * @exception NoresourceError
+     *           Output device is not available.
+     * @since 0.7.9
+     */
+    void flushBufferedPrompts() throws NoresourceError;
+
     /**
      * Delays until all prompts are played that do not allow for barge-in.
      * 

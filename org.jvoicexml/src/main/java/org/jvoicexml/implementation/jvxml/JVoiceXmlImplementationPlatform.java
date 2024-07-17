@@ -270,6 +270,14 @@ public final class JVoiceXmlImplementationPlatform
      * {@inheritDoc}
      */
     @Override
+    public void setUserHungup() {
+        hungup = true;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public SystemOutput getSystemOutput() throws NoresourceError,
             ConnectionDisconnectHangupEvent {
         synchronized (this) {
@@ -1074,6 +1082,11 @@ public final class JVoiceXmlImplementationPlatform
             final DocumentServer server) 
             throws NoresourceError, ConnectionDisconnectHangupEvent,
                 BadFetchError {
+        if (hungup) {
+            LOGGER.warn("user hungup. Ignoring prompt queue request for '"
+                    + speakable + "'");
+            return;
+        }
         final SystemOutput outputToUse = getSystemOutput();
         final SessionIdentifier sessionId = session.getSessionId();
         outputToUse.queueSpeakable(speakable, sessionId, server);

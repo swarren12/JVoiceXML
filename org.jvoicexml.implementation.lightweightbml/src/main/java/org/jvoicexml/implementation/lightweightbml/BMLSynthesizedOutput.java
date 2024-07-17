@@ -373,7 +373,15 @@ public final class BMLSynthesizedOutput
      * {@inheritDoc}
      */
     @Override
-    public void cancelOutput(final BargeInType bargeInType) throws NoresourceError {
+    public void cancelOutput(final BargeInType bargeInType)
+        throws NoresourceError {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
     }
 
     /**
