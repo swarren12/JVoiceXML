@@ -78,7 +78,9 @@ public class HangupEventHandler implements EventSubscriber {
             output.flushBufferedPrompts();
             // Mark the user as hung up to avoid any further queuing of prompts
             platform.setUserHungup();
-        } catch (ConnectionDisconnectHangupEvent | NoresourceError e) {
+        } catch (ConnectionDisconnectHangupEvent e) {
+            // ignore another hangup event
+        } catch (NoresourceError e) {
             LOGGER.warn("error while trying to flush prompt buffers", e);
         }
     }
