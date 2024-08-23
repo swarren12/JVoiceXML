@@ -194,7 +194,8 @@ final class TextSynthesizedOutput
     public void cancelOutput(final BargeInType bargeInType)
             throws NoresourceError {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("clearing all pending messages");
+            LOGGER.debug("clearing all pending messages with barge-in type '" 
+                + bargeInType + "'");
         }
         final Collection<SpeakableText> skipped =
             new java.util.ArrayList<SpeakableText>();
@@ -211,6 +212,17 @@ final class TextSynthesizedOutput
         }
     }
 
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("flushing output queue");
+        }
+        texts.clear();
+        if (texts.isEmpty()) {
+            fireQueueEmpty();
+        }
+    }
+    
     /**
      * {@inheritDoc}
      */

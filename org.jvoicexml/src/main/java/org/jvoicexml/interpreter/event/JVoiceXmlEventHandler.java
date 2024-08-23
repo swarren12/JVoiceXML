@@ -132,10 +132,6 @@ public final class JVoiceXmlEventHandler
         model = dataModel;
         eventbus = bus;
         events = new java.util.LinkedList<JVoiceXMLEvent>();
-        
-        final HangupEventStrategy hangupEventStrategy =
-                new HangupEventStrategy();
-        addStrategy(hangupEventStrategy);
     }
 
     /**

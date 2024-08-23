@@ -49,6 +49,7 @@ import org.jvoicexml.event.plain.implementation.SpokenInputEvent;
 import org.jvoicexml.event.plain.implementation.SynthesizedOutputEvent;
 import org.jvoicexml.interpreter.datamodel.Connection;
 import org.jvoicexml.interpreter.datamodel.DataModel;
+import org.jvoicexml.interpreter.event.HangupEventStrategy;
 import org.jvoicexml.interpreter.scope.Scope;
 import org.jvoicexml.interpreter.scope.ScopeObserver;
 import org.jvoicexml.interpreter.scope.ScopedCollection;
@@ -328,6 +329,12 @@ public class JVoiceXmlSession extends Thread
     private void createContext() {
         // Create a new context.
         context = new VoiceXmlInterpreterContext(this, configuration);
+
+        // Add the hangup event strategy to the event handler.
+        final EventHandler eventHandler = context.getEventHandler();
+        final HangupEventStrategy hangupEventStrategy =
+                new HangupEventStrategy();
+        eventHandler.addStrategy(hangupEventStrategy);
 
         // Subscribe to the event bus.
         final EventBus eventbus = context.getEventBus();

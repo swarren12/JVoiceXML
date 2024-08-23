@@ -246,6 +246,14 @@ public final class MarySynthesizedOutput
 
     /**
      * {@inheritDoc}
+     */
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+        synthesisQueue.flushBufferedPrompts();
+    }
+    
+    /**
+     * {@inheritDoc}
      * 
      * @return <code>true</code>
      */

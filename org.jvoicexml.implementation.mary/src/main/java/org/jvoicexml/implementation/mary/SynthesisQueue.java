@@ -304,8 +304,8 @@ final class SynthesisQueue extends Thread {
     }
 
     /**
-     * Stops the currently playing output if barge-in is enabled and. Removes
-     * from the queue the speakables for which barge-in is enabled
+     * Stops the currently playing output if barge-in is enabled and removes
+     * from the queue the speakables for which barge-in is enabled.
      * @param bargeInType the type of bargein to cancel
      */
     public void cancelOutput(final BargeInType bargeInType) {
@@ -330,6 +330,19 @@ final class SynthesisQueue extends Thread {
         }
     }
 
+    /**
+     * Stops the currently playing output and removes all speakables from the
+     * queue.
+     */
+    public void flushBufferedPrompts() {
+        if (out != null) {
+            out.cancel();
+        }
+        synchronized (queuedSpeakables) {
+            queuedSpeakables.clear();
+        }
+    }
+    
     /**
      * Stops the currently playing output if barge-in is enabled.
      */

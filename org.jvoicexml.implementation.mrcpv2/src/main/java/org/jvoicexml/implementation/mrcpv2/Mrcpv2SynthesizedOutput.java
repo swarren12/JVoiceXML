@@ -155,8 +155,8 @@ public final class Mrcpv2SynthesizedOutput
             } else {
                 LOGGER.warn("no means to queue '" + speakable + "'");
             }
-        } catch (MrcpInvocationException | IOException |
-                InterruptedException | NoMediaControlChannelException e) {
+        } catch (MrcpInvocationException | IOException
+                | InterruptedException | NoMediaControlChannelException e) {
             throw new NoresourceError(e.getMessage(), e);
         }
     }
@@ -310,7 +310,7 @@ public final class Mrcpv2SynthesizedOutput
     }
 
     /**
-     * Notifies all listeners that output has started.
+     * Notifies all listeners that output has ended.
      * 
      * @param speakable
      *            the current speakable.
@@ -360,6 +360,15 @@ public final class Mrcpv2SynthesizedOutput
     public void cancelOutput(final BargeInType bargeInType)
             throws NoresourceError {
         LOGGER.warn("cancelOutput not implemented");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void flushBufferedPrompts() throws NoresourceError {
+        queueCount = 0;
+        LOGGER.warn("flushBufferedPrompts not implemented");
     }
 
     /**

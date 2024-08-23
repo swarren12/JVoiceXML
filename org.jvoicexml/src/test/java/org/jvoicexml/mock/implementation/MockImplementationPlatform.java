@@ -170,7 +170,6 @@ public final class MockImplementationPlatform
      */
     @Override
     public boolean isHungup() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -178,8 +177,14 @@ public final class MockImplementationPlatform
      * {@inheritDoc}
      */
     @Override
+    public void setUserHungup() {
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean isClosed() {
-        // TODO Auto-generated method stub
         return false;
     }
 

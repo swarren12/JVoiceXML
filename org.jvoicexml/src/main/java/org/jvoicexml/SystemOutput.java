@@ -85,6 +85,7 @@ public interface SystemOutput {
                     throws BadFetchError, NoresourceError, 
                         ConnectionDisconnectHangupEvent;
 
+   
     /**
      * Playback all queued prompts.
      * 
@@ -119,4 +120,12 @@ public interface SystemOutput {
      * @since 0.5
      */
     void cancelOutput(BargeInType type) throws NoresourceError;
+
+    /**
+     * Flushes the prompt queue. Afterwards an empty queue is guaranteed.
+     * @exception NoresourceError
+     *           Output device is not available.
+     * @since 0.7.9
+     */
+    void flushBufferedPrompts() throws NoresourceError;
 }
